@@ -28,14 +28,14 @@ class node():
     posXposYposZ = None
     posXposYnegZ = None
     posXnegYposZ = None
-    posXposYnegZ = None
+    posXnegYnegZ = None
     negXposYposZ = None
     negXposYnegZ = None
     negXnegYposZ = None
     negXnegYnegZ = None
 
     #array of children
-    chidren = [posXposYposZ,posXposYnegZ,posXnegYposZ,posXposYnegZ,negXposYposZ,negXposYnegZ,negXnegYposZ,negXnegYnegZ]
+    chidren = [posXposYposZ,posXposYnegZ,posXnegYposZ,posXnegYnegZ,negXposYposZ,negXposYnegZ,negXnegYposZ,negXnegYnegZ]
 
     #position in space
     Xupperlimit = None
@@ -62,7 +62,7 @@ class node():
         print type(self.posXposYposZ)
         print type(self.posXposYnegZ)
         print type(self.posXnegYposZ)
-        print type(self.posXposYnegZ)
+        print type(self.posXnegYnegZ)
         print type(self.negXposYposZ)
         print type(self.negXposYnegZ)
         print type(self.negXnegYposZ)
@@ -79,7 +79,7 @@ class node():
         print "posXposYposZ: \t {0}".format(self.posXposYposZ)
         print "posXposYnegz: \t {0}".format(self.posXposYnegZ)
         print "posXnegYposZ: \t {0}".format(self.posXnegYposZ)
-        print "posXposYnegZ: \t {0}".format(self.posXposYnegZ)
+        print "posXnegYnegZ: \t {0}".format(self.posXnegYnegZ)
         print "negXposYposZ: \t {0}".format(self.negXposYposZ)
         print "negXposYnegZ: \t {0}".format(self.negXposYnegZ)
         print "negXnegYposZ: \t {0}".format(self.negXnegYposZ)
@@ -106,7 +106,11 @@ class node():
         """
 
         if level == 0:
-            self.value.append((coord,payload))
+            try:
+                self.value.append((coord,payload))
+            except AttributeError:
+                self.value = []
+                self.value.append((coord,payload))
 
         else:
             level -= 1
@@ -217,7 +221,7 @@ class node():
             
 
 
-class octree():
+class Octree():
     """
     class to hold the whole tree
     """
@@ -247,7 +251,15 @@ class octree():
         Return payloads and coordinates of every payload within
         a specified area
         """
-        if shape == "box":
+        """
+        When shape is cube: 
+        Search space is defined as the cubic region where each face is 'size'
+        distance directly away from the center. 
+        """
+        """
+        Should support "cube", "sphere", "doughnut"
+        """
+        if shape == "cube":
             """
             This deals with things around the center of a node in a box shape
             with a radius of 'size'
@@ -388,49 +400,77 @@ class octree():
             part of that selection is within the childspace. 
             
             """
-            Xedge_max = self.center[0] + size
-            Xedge_min = self.center[0] - size
-            Yedge_max = self.center[1] + size
-            Yedge_min = self.center[1] - size
-            Zedge_max = self.center[2] + size
-            Zedge_min = self.center[2] - size
-
-            corner1 = (Xedge_max, Yedge_max, Zedge_max)
-            corner2 = (Xedge_max, Yedge_max, Zedge_min)
-            corner3 = (Xedge_max, Yedge_min, Zedge_max)
-            corner4 = (Xedge_max, Yedge_min, Zedge_min)
-            corner5 = (Xedge_min, Yedge_max, Zedge_max)
-            corner6 = (Xedge_min, Yedge_max, Zedge_min)
-            corner7 = (Xedge_min, Yedge_min, Zedge_max)
-            corner8 = (Xedge_min, Yedge_min, Zedge_min)
-            corners = [corner1, corner2, corner3, corner4, corner5, corner6, corner7, corner8]
             
-            investigating = []
-            for node in [self.root]:
-                table = ((corner1[0] > self.root.center[0]),(corner[1] > self.root.center[1]),(corner[2] > self.root.center[2]))
-                if not False in table:
-                    investigating.append(self.root.posXposYposZ)
-                table = ((corner2[0] > self.root.center[0]),(corner[1] > self.root.center[1]),(corner[2] < self.root.center[2]))
-                if not False in table:
-                    investigating.append(self.root.posXposYnegZ)
-                table = ((corner3[0] > self.root.center[0]),(corner[1] < self.root.center[1]),(corner[2] > self.root.center[2]))
-                if not False in table:
-                    investigating.append(self.root.posXnegYposZ)
-                table = ((corner4[0] > self.root.center[0]),(corner[1] < self.root.center[1]),(corner[2] < self.root.center[2]))
-                if not False in table:
-                    investigating.append(self.root.posXnegYnegZ)
-                table = ((corner5[0] < self.root.center[0]),(corner[1] > self.root.center[1]),(corner[2] > self.root.center[2]))
-                if not False in table:
-                    investigating.append(self.root.negXposYposZ)
-                table = ((corner6[0] < self.root.center[0]),(corner[1] > self.root.center[1]),(corner[2] < self.root.center[2]))
-                if not False in table:
-                    investigating.append(self.root.negXposYnegZ)
-                table = ((corner7[0] < self.root.center[0]),(corner[1] < self.root.center[1]),(corner[2] > self.root.center[2]))
-                if not False in table:
-                    investigating.append(self.root.negXnegYposZ)
-                table = ((corner8[0] < self.root.center[0]),(corner[1] < self.root.center[1]),(corner[2] < self.root.center[2]))
-                if not False in table:
-                    investigating.append(self.root.negXnegYnegZ)
+            payloads = []
+            templist = [self.root]
+            list_list = []
+            list_list.append([self.root])
+            for level in range(self.maxiter):
+                list_list.append([])
+
+            print list_list
+            for level in range(self.maxiter):
+                for node in list_list[level]:
+                    Xedge_max = center[0] + size
+                    Xedge_min = center[0] - size
+                    Yedge_max = center[1] + size
+                    Yedge_min = center[1] - size
+                    Zedge_max = center[2] + size
+                    Zedge_min = center[2] - size
+
+                    corner0 = (Xedge_max, Yedge_max, Zedge_max)
+                    corner1 = (Xedge_max, Yedge_max, Zedge_min)
+                    corner2 = (Xedge_max, Yedge_min, Zedge_max)
+                    corner3 = (Xedge_max, Yedge_min, Zedge_min)
+                    corner4 = (Xedge_min, Yedge_max, Zedge_max)
+                    corner5 = (Xedge_min, Yedge_max, Zedge_min)
+                    corner6 = (Xedge_min, Yedge_min, Zedge_max)
+                    corner7 = (Xedge_min, Yedge_min, Zedge_min)
+                    corners = [corner0, corner1, corner2, corner3, corner4, corner5, corner6, corner7]
+                    table = ((corner0[0] > node.Xcenter),(corner0[1] > node.Ycenter) ,(corner0[2] > node.Zcenter))
+                    if not False in table:
+                        list_list[level+1].append(node.posXposYposZ)
+                    table = ((corner1[0] > node.Xcenter),(corner1[1] > node.Ycenter) ,(corner1[2] < node.Zcenter))
+                    if not False in table:
+                        list_list[level+1].append(node.posXposYnegZ)
+                    table = ((corner2[0] > node.Xcenter),(corner2[1] < node.Ycenter) ,(corner2[2] > node.Zcenter))
+                    if not False in table:
+                        list_list[level+1].append(node.posXnegYposZ)
+                    table = ((corner3[0] > node.Xcenter),(corner3[1] < node.Ycenter) ,(corner3[2] < node.Zcenter))
+                    if not False in table:
+                        list_list[level+1].append(node.posXnegYnegZ)
+                    table = ((corner4[0] < node.Xcenter),(corner4[1] > node.Ycenter) ,(corner4[2] > node.Zcenter))
+                    if not False in table:
+                        list_list[level+1].append(node.negXposYposZ)
+                    table = ((corner5[0] < node.Xcenter),(corner5[1] > node.Ycenter) ,(corner5[2] < node.Zcenter))
+                    if not False in table:
+                        list_list[level+1].append(node.negXposYnegZ)
+                    table = ((corner6[0] < node.Xcenter),(corner6[1] < node.Ycenter) ,(corner6[2] > node.Zcenter))
+                    if not False in table:
+                        list_list[level+1].append(node.negXnegYposZ)
+                    table = ((corner7[0] < node.Xcenter),(corner7[1] < node.Ycenter) ,(corner7[2] < node.Zcenter))
+                    if not False in table:
+                        list_list[level+1].append(node.negXnegYnegZ)
+
+
+                    #must remove children that aren't real yet
+                    temp_templist = []
+                    for node in list_list[level+1]:
+                        try:
+                           node.Xcenter  
+                           temp_templist.append(node)
+                        except AttributeError:
+                            pass
+                    list_list[level+1] = temp_templist
+             
+
+            payloads = [i.value for i in list_list[-1]]
+            return payloads
+
+                
+        
+
+
 
         
 
@@ -458,21 +498,28 @@ def find_closest_three(x, y, z, tree):
 
 if __name__ == "__main__":
     print "Creating octree"
-    tree = octree(100,100,100, -100, -100, -100)
+    tree = Octree(100,100,100, -100, -100, -100)
+    print "inserting node"
+    tree.add_item("derp", (90.34251,10.1234,10.9876))
+    print "Great success"
     print "inserting node"
     tree.add_item("derp", (10.34251,10.1234,10.9876))
     print "Great success"
+    print "inserting node"
+    tree.add_item("derp", (-10.34251,10.1234,10.9876))
+    print "Great success"
+    print "inserting node"
+    tree.add_item("derp", (10.34251,-10.1234,10.9876))
+    print "Great success"
+    print "inserting node"
+    tree.add_item("derp", (10.34251,10.1234,-10.9876))
+    print "Great success"
     
     #get some data
-    tree.root.print_info()
-    for child in tree.root.chidren:
-        print type(child)
-    tree.root.print_types()
-    for child in tree.root.get_array_of_children():
-        try:
-            grandchild = child.get_array_of_children()
-        except AttributeError:
-            print type(child)
+    entries = tree.find_within_range((0,0,0), 40, "cube")
+    for i in entries:
+        print i
+
 
 
 
