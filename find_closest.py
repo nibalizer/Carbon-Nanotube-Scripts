@@ -3,55 +3,65 @@
 
 import sys
 import numpy as np
+import octree
 
-filename = sys.argv[1]
+if __name__ == "__main__":
+    filename = sys.argv[1]
 
-with open(filename, 'r') as f:
-    p = f.readlines()
-f.closed
-
-
-carbons = []
-for i,line in enumerate(p):
-    if i % 100 == 0:
-        print i, line
-    letter, x, y, z = line.split('\t')
-    carbons.append([i, float(x), float(y), float(z), 0, 0 ,0])
-
-bond_len_max = 2
-del p
-
-carbons = np.array(carbons)
-def within_range(c1,c2):
-    for a,b in zip(c1,c2)[1:]:
-        if not (b <= a + bond_len_max and b >= a - bond_len_max):
-
-def distance_formula(c1,c2):
-    dist = (c2[1] - c1[1])**2 + (c2[2] - c1[2])**2 + (c2[3] - c1[3])**2
-    return dist
-
-for carbon in carbons:
-    close = []
-    print "Finding Closest"
-    for carbon_1 in carbons:
-        for a,b in zip(carbon,carbon_1):
-            if not (b <= a + bond_len_max and b >= a - bond_len_max):
-               break
-        else:
-            close.append(carbon_1)
-            print carbon_1
-    distance = []
-    print "Finding Distances"
-    for close_carbon in close:
-        distance.append((distance_formula(carbon, close_carbon),close_carbon))
-        print close_carbon
-    distance.sort()
-    for index, (distance, close_carbon) in enumerate(distance[1:4]):
-        carbon[-index] = close_carbon[0]
-        
-
-for carbon in carbons:
-    print ",".join(map(str,carbon))
+    with open(filename, 'r') as f:
+        p = f.readlines()
+    f.closed
 
 
-        
+    print "loading carbons..."
+    carbons = []
+    for i,line in enumerate(p):
+        if i % 100000 == 0:
+            print "."
+        letter, x, y, z = line.split('\t')
+        carbons.append([i, float(x), float(y), float(z), 0, 0 ,0])
+
+    bond_len_max = 2
+    carbons = np.array(carbons)
+    xs = carbons[:,1]
+    ys = carbons[:,2]
+    zs = carbons[:,3]
+    maxx = xs.max()
+    minx = xs.min()
+    maxy = ys.max()
+    miny = ys.min()
+    maxz = zs.max()
+    minz = zs.min()
+    del p
+
+
+    print maxx,maxy,maxz,minx,miny,minz
+
+    def distance_formula(c1,c2):
+        dist = (c2[1] - c1[1])**2 + (c2[2] - c1[2])**2 + (c2[3] - c1[3])**2
+        return dist
+
+    print "Creating octree"
+    tree = octree.Octree(maxx, maxy, maxz, minx, miny, minz, maxiter=7)
+    s = carbons[0]
+    for i in s:
+        print i
+    print "inserting node"
+    for i in carbons:
+        if i[0] % 100000 == 0:
+            print "adding numebr {0}".format(i)
+        tree.add_item(i[0], (i[1],i[2],i[3]))
+
+#    for i in carbons:
+#        if i[0] % 100000 == 0:
+#            print "adding numebr {0}".format(i)
+#        tree.add_item(i[0], (i[1],i[2],i[3]))
+    #get some data
+    print "adding things complete"
+    for i in carbons[:10]:
+        print i
+        entries = tree.find_within_range((i[1], i[2], i[3]), 20000, "cube")
+        print entries
+
+
+

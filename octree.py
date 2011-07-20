@@ -22,7 +22,7 @@ class node():
         self.Zcenter = (self.Zupperlimit + self.Xlowerlimit)/2.
 
     parent = None
-    value = None
+    value = []
     
     #children
     posXposYposZ = None
@@ -106,11 +106,7 @@ class node():
         """
 
         if level == 0:
-            try:
-                self.value.append((coord,payload))
-            except AttributeError:
-                self.value = []
-                self.value.append((coord,payload))
+            self.value.append((coord,payload))
 
         else:
             level -= 1
@@ -408,7 +404,6 @@ class Octree():
             for level in range(self.maxiter):
                 list_list.append([])
 
-            print list_list
             for level in range(self.maxiter):
                 for node in list_list[level]:
                     Xedge_max = center[0] + size
@@ -516,7 +511,7 @@ if __name__ == "__main__":
     print "Great success"
     
     #get some data
-    entries = tree.find_within_range((0,0,0), 40, "cube")
+    entries = tree.find_within_range((0,0,0), 2, "cube")
     for i in entries:
         print i
 
